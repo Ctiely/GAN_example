@@ -152,18 +152,18 @@ class DCGAN(Base):
             span_index = index[span_index]
             yield datas[span_index]
     
-    def generate_image(self, epoch):
+    def generate_image(self, step):
         save_dir = os.path.join(self.save_path, "images")
-        os.makedirs(f"{save_dir}/epoch{epoch}", exist_ok=True)
+        os.makedirs(f"{save_dir}/step{step}", exist_ok=True)
         G_samples = self.sess.run(
                 self.G_sample,
                 feed_dict={self.z: sample_z(16, self.z_dim)})
         for i, sample in enumerate(G_samples):
-            cv2.imwrite(f"{save_dir}/epoch{epoch}/image{i}.png", (sample + 1) / 2.0 * 255)
+            cv2.imwrite(f"{save_dir}/step{step}/image{i}.png", (sample + 1) / 2.0 * 255)
     
-    def train(self, datas, training_epoches=int(1e6), batch_size=32, G_updates=1):
+    def train(self, datas, training_steps=int(1e6), batch_size=32, G_updates=1):
         assert G_updates > 0
-        epoch = 1
+        step = 1
         while True:
             data_generator = self._generator(datas, batch_size)
             while True:
@@ -184,21 +184,21 @@ class DCGAN(Base):
                                 feed_dict={self.z: sample_z(cur_batch_size, self.z_dim)})
                         G_loss_batch_total += G_loss_batch
                     logging.info(
-                        f">>>>epoch{epoch} D_loss: {D_loss_batch} G_loss: {G_loss_batch_total / G_updates}")
+                        f">>>>step{step} D_loss: {D_loss_batch} G_loss: {G_loss_batch_total / G_updates}")
                     
-                    if epoch % self.save_model_freq == 0:
+                    if step % self.save_model_freq == 0:
                         self.save_model()
                     
-                    if epoch % self.generator_image_freq == 0:
-                        self.generate_image(epoch)
+                    if step % self.generator_image_freq == 0:
+                        self.generate_image(step)
                     
-                    epoch += 1
+                    step += 1
                     
                 except StopIteration:
                     del data_generator
                     break
             
-            if epoch > training_epoches:
+            if step > training_steps:
                 break
         
        
