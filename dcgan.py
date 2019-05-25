@@ -166,18 +166,19 @@ class DCGAN(Base):
                 try:
                     img_batch = next(data_generator)
                     cur_batch_size = len(img_batch)
+                    batch_z = sample_z(cur_batch_size, self.z_dim)
                     
                     _, D_loss_batch = self.sess.run(
                             [self.D_solver, self.D_loss],
                             feed_dict={self.image: img_batch,
-                                       self.z: sample_z(cur_batch_size, self.z_dim)}
+                                       self.z: batch_z}
                             )
                     
                     G_loss_batch_total = 0
                     for _ in range(G_updates):
                         _, G_loss_batch = self.sess.run(
                                 [self.G_solver, self.G_loss],
-                                feed_dict={self.z: sample_z(cur_batch_size, self.z_dim)})
+                                feed_dict={self.z: batch_z})
                         G_loss_batch_total += G_loss_batch
                     logging.info(
                         f">>>>step{step} D_loss: {D_loss_batch} G_loss: {G_loss_batch_total / G_updates}")
