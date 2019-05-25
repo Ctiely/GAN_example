@@ -46,6 +46,8 @@ class DCGAN(Base):
     def _build_network(self):
         self.image = tf.placeholder(
                 tf.uint8, [None, *self.img_dim], name="real_inputs")
+        # 将图片归一化到[-1, 1]
+        image_normalize = tf.subtract(tf.divide(tf.cast(self.image, tf.float32), 255.0 / 2.0), 1.0)
         self.z = tf.placeholder(
                 tf.float32, [None, self.z_dim], name="z")
         
@@ -81,7 +83,7 @@ class DCGAN(Base):
         self.G_sample = g
             
         def __discriminator(img):
-            img = tf.subtract(tf.divide(tf.cast(img, tf.float32), 255.0 / 2.0), 1.0)
+            # 这里的输入是已经被归一化到[-1, 1]之间的图像
             shared = tcl.conv2d(
                     img, num_outputs=64, kernel_size=4,
                     stride=2, activation_fn=lrelu)
@@ -106,7 +108,7 @@ class DCGAN(Base):
             return tf.nn.sigmoid(d), d
         
         with tf.variable_scope("discriminator"):
-            self.D, self.D_logits = __discriminator(self.image)
+            self.D, self.D_logits = __discriminator(image_normalize)
             
         with tf.variable_scope("discriminator", reuse=True):
             self.D_, self.D_logits_ = __discriminator(g)
